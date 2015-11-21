@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.IrSeekerSensor;
 import com.qualcomm.robotcore.hardware.OpticalDistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.robocol.Telemetry;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -46,7 +47,7 @@ import com.qualcomm.robotcore.util.Range;
  * Enables control of the robot via the gamepad
  */
 public class K9TeleOp extends OpMode {
-	
+
 	/*
 	 * Note: the configuration of the servos is such that
 	 * as the arm servo approaches 0, the arm position moves up (away from the floor).
@@ -70,8 +71,14 @@ public class K9TeleOp extends OpMode {
 	// amount to change the claw servo position by
 	double clawDelta = 0.1;
 
-	DcMotor motorRight;
-	DcMotor motorLeft;
+	DcMotor motorRightF;
+	DcMotor motorRightB;
+	DcMotor motorLeftF;
+	DcMotor motorLeftB;
+	DcMotor middlemotor;
+
+
+
 	Servo claw;
 	Servo arm;
 
@@ -112,22 +119,63 @@ public class K9TeleOp extends OpMode {
 		 *    "servo_1" controls the arm joint of the manipulator.
 		 *    "servo_6" controls the claw joint of the manipulator.
 		 */
-		motorRight = hardwareMap.dcMotor.get("motor_2");
-		motorLeft = hardwareMap.dcMotor.get("motor_1");
-		motorLeft.setDirection(DcMotor.Direction.REVERSE);
-		
-		arm = hardwareMap.servo.get("servo_1");
-		claw = hardwareMap.servo.get("servo_6");
+		try {
+			motorRightF = hardwareMap.dcMotor.get("frontright");
+			motorRightB = hardwareMap.dcMotor.get("backright");
+			motorLeftF = hardwareMap.dcMotor.get("frontleft");
+			motorLeftB = hardwareMap.dcMotor.get("backleft");
+			arm = hardwareMap.servo.get("arm");
+			claw = hardwareMap.servo.get("claw");
+			middlemotor = hardwareMap.dcMotor.get("middlemotor");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
 
-		colorSensor = hardwareMap.colorSensor.get("color_1");
-		touchSensor = hardwareMap.touchSensor.get("touch_1");
-		distanceSensor = hardwareMap.opticalDistanceSensor.get("distance_1");
-		irSeeker = hardwareMap.irSeekerSensor.get("irSeeker_1");
-		colorSensor.enableLed(false);
+
+
+		try {
+			//motorLeft = hardwareMap.dcMotor.get("motor_1");
+			//motorLeft.setDirection(DcMotor.Direction.REVERSE);
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		/*try {
+			arm = hardwareMap.servo.get("servo_1");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		try {
+			claw = hardwareMap.servo.get("servo_6");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		try {
+			colorSensor = hardwareMap.colorSensor.get("color_1");
+			colorSensor.enableLed(false);
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		try {
+			touchSensor = hardwareMap.touchSensor.get("touch_1");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		try {
+			distanceSensor = hardwareMap.opticalDistanceSensor.get("distance_1");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+		try {
+			irSeeker = hardwareMap.irSeekerSensor.get("irSeeker_1");
+		}catch(Exception e){
+			telemetry.addData("",e.getMessage());
+		}
+
+
 
 		// assign the starting position of the wrist and claw
 		armPosition = 0.2;
-		clawPosition = 0.2;
+		clawPosition = 0.2;*/
 	}
 
 	/*
@@ -151,42 +199,71 @@ public class K9TeleOp extends OpMode {
 		// and 1 is full right
 		float throttle = -gamepad1.left_stick_y;
 		float direction = gamepad1.left_stick_x;
-		float right = throttle - direction;
-		float left = throttle + direction;
+		//float right = throttle - direction;
+		//float left = throttle + direction;
 
 		// clip the right/left values so that the values never exceed +/- 1
-		right = Range.clip(right, -1, 1);
-		left = Range.clip(left, -1, 1);
+		//right = Range.clip(right, -1, 1);
+		//left = Range.clip(left, -1, 1);
 
 		// scale the joystick value to make it easier to control
 		// the robot more precisely at slower speeds.
-		right = (float) scaleInput(right);
-		left = (float) scaleInput(left);
+		float right = (float) gamepad1.right_stick_y;
+		float left = (float) gamepad1.left_stick_y;
 
 		// write the values to the motors
-		motorRight.setPower(right);
-		motorLeft.setPower(left);
+		//motorRight.setPower(0);
+		//motorLeft.setPower(0);
 
 		// update the position of the arm.
-		if (gamepad1.a) {
-			// if the A button is pushed on gamepad1, increment the position of
-			// the arm servo.
-			armPosition += armDelta;
-		}
+		try {
+			telemetry.addData("Gamepad1 left x", gamepad1.left_stick_x);
+			telemetry.addData("Gamepad1 left y", gamepad1.left_stick_y);
+			telemetry.addData("Gamepad1 left x", gamepad1.right_stick_x);
+			telemetry.addData("Gamepad1 left y", gamepad1.right_stick_y);
+			//telemetry.addData("Gamepad1 )
 
-		if (gamepad1.y) {
-			// if the Y button is pushed on gamepad1, decrease the position of
-			// the arm servo.
-			armPosition -= armDelta;
-		}
+			motorRightF.setPower(right);
+			motorRightB.setPower(-right);
 
-		// update the position of the claw
-		if (gamepad1.x) {
-			clawPosition += clawDelta;
-		}
+			motorLeftF.setPower(-left);
+			motorLeftB.setPower(left);
 
-		if (gamepad1.b) {
-			clawPosition -= clawDelta;
+			if (gamepad2.a) {
+				// if the A button is pushed on gamepad1, increment the position of
+				// the arm servo.
+				armPosition += armDelta;
+			}
+
+			if (gamepad2.y) {
+				// if the Y button is pushed on gamepad1, decrease the position of
+				// the arm servo.
+				armPosition -= armDelta;
+			}
+
+			// update the position of the claw
+			if (gamepad2.x) {
+				clawPosition += clawDelta;
+			}
+
+			if (gamepad2.b) {
+				clawPosition -= clawDelta;
+			}
+
+			if(gamepad1.left_bumper){
+				middlemotor.setPower(.75);
+				telemetry.addData("Gamepad1 left bumper", gamepad1.left_bumper);
+			}
+			else if(gamepad1.right_bumper){
+				middlemotor.setPower(-.75);
+				telemetry.addData("Gamepad1 right bumper", gamepad1.right_bumper);
+			}
+			else{
+				middlemotor.setPower(0);
+			}
+
+		}catch(Exception e) {
+			telemetry.addData("Error", "Cannot detect game controller");
 		}
 
 		// clip the position values so that they never exceed their allowed range.
@@ -198,7 +275,7 @@ public class K9TeleOp extends OpMode {
 		claw.setPosition(clawPosition);
 
 		// get sensors and send values back to Driver Station via Telemetry
-		boolean isTouch = touchSensor.isPressed();
+		/*boolean isTouch = touchSensor.isPressed();
 		int blue = colorSensor.blue();
 		int green = colorSensor.green();
 		int red = colorSensor.red();
@@ -212,7 +289,7 @@ public class K9TeleOp extends OpMode {
 			motorRight.setPower(right);
 		} else {
 			motorRight.setPower(0);
-		}
+		}*/
 
 
 
@@ -223,14 +300,16 @@ public class K9TeleOp extends OpMode {
 		 * will return a null value. The legacy NXT-compatible motor controllers
 		 * are currently write only.
 		 */
-        telemetry.addData("Text", "*** Robot Data***");
-        telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
-        telemetry.addData("claw", "claw:  " + String.format("%.2f", clawPosition));
-        telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
-        telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
-		telemetry.addData("Touch Sensor: ", Boolean.toString(isTouch));
+		telemetry.addData("Text", "Hello Driver");
+		telemetry.addData("Text", "*** Robot Data***");
+		/*telemetry.addData("arm", "arm:  " + String.format("%.2f", armPosition));
+		telemetry.addData("claw", "claw:  " + String.format("%.2f", clawPosition));*/
+		telemetry.addData("left tgt pwr",  "left  pwr: " + String.format("%.2f", left));
+		telemetry.addData("right tgt pwr", "right pwr: " + String.format("%.2f", right));
+		/*telemetry.addData("Touch Sensor: ", Boolean.toString(isTouch));
 		telemetry.addData("Color",String.format("r%d,g%d,b%d",red, green, blue));
-		telemetry.addData("Distance: ",distance);
+		telemetry.addData("Distance: ",distance);*/
+
 	}
 
 	/*
@@ -243,7 +322,7 @@ public class K9TeleOp extends OpMode {
 
 	}
 
-    	
+
 	/*
 	 * This method scales the joystick input so for low joystick values, the 
 	 * scaled value is less than linear.  This is to make it easier to drive
@@ -252,10 +331,10 @@ public class K9TeleOp extends OpMode {
 	double scaleInput(double dVal)  {
 		double[] scaleArray = { 0.0, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
 				0.30, 0.36, 0.43, 0.50, 0.60, 0.72, 0.85, 1.00, 1.00 };
-		
+
 		// get the corresponding index for the scaleInput array.
 		int index = (int) (dVal * 16.0);
-		
+
 		// index should be positive.
 		if (index < 0) {
 			index = -index;
